@@ -359,7 +359,7 @@ async def lol_mastery(
         )
         mastery=get_mastery(name, region)
         if number==None:
-            number=1
+            number=0
         else:
             number-=1
         e.set_thumbnail(
