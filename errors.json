@@ -1,0 +1,13 @@
+{
+    "400":"❌ 400 : There was an error in your command, please try again. If the error still persists, please contact **STEUSSO** on Discord.",
+    "401":"❌ 401 : Unauthorized. Please contact **STEUSSO** on Discord.",
+    "403":"❌ 403 : Forbidden. For some reason, you aren't allowed to execute this command. If the error still persists, please contact **STEUSSO** on Discord.",
+    "404":"❌ 404 Error. You made a mistake in your request, please try again. If the error still persists, please contact **STEUSSO** on Discord.",
+    "405":"❌ 405 : Method not allowed. If the error still persists, please contact **STEUSSO** on Discord.",
+    "415":"❌ 415 : Unsupported media type, please try again. If the error still persists, please contact **STEUSSO** on Discord.",
+    "429":"❌ 429 : Rate limit exceeded, please try again later. If the error still persists, please contact **STEUSSO** on Discord.",
+    "500":"❌ 500 : Internal server error, please try again later. If the error still persists, please contact **STEUSSO** on Discord.",
+    "502":"❌ 502 : Bad gateway error, please try again. If the error still persists, please contact **STEUSSO** on Discord.",
+    "503":"❌ 503 : Service unavailable, please try again later. If the error still persists, please contact **STEUSSO** on Discord.",
+    "504":"❌ 504 : Gateway timeout, please try again later. If the error still persists, please contact **STEUSSO** on Discord."
+}
