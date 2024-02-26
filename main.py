@@ -388,4 +388,4 @@ async def lol_mastery(
             data=json.load(f)
             await interaction.response.send_message(data[str(request.status_code)])
 
-bot.run("MTE5ODU4NjQ2MzIwNjUxMDYyMw.GpOZ19.jA_V8HdXw55YbJMyrPt_7YdWG1E7QPPOKU5tGo")
+bot.run("")
