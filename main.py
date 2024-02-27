@@ -5,9 +5,10 @@ import json
 from discord.ext import commands
 from discord import app_commands
 from discord.app_commands import Choice
+from datetime import datetime
 
 #REQUIREMENTS
-api_key="RGAPI-74bfc086-48f0-4791-a18a-4ac37a4dd14b"
+api_key=""
 region_choices=[
     Choice(
         name="EUW",
@@ -408,6 +409,84 @@ async def lol_champion(
             text=f"Command made by {interaction.user}",
             icon_url=interaction.user.avatar
         )
+        await interaction.response.send_message(embeds=list_embeds)
+    else:
+        with open("errors.json", encoding="UTF-8") as f:
+            data=json.load(f)
+            await interaction.response.send_message(data[str(request.status_code)])
+
+#lol_status
+@bot.tree.command(
+    name="lol_status",
+    description="Gives you informations about LoL server status."
+)
+@app_commands.describe(
+    region="The region you're playing in."
+)
+@app_commands.choices(
+    region=region_choices
+)
+async def lol_status(
+    interaction : discord.Interaction,
+    region : str
+):
+    request=requests.get("https://{}.api.riotgames.com/lol/status/v4/platform-data?api_key={}".format(region, api_key))
+    if request.status_code==200:
+        data=request.json()
+        list_embeds=[]
+        for i in range(len(data["incidents"])):
+            for k in range(len(data["incidents"][i]["titles"])):
+                if data["incidents"][i]["titles"][k]["locale"]=="en_US":
+                    index=k
+            embed=discord.Embed(
+                title=data["incidents"][i]["titles"][index]["content"],
+                description=data["incidents"][i]["updates"][0]["translations"][index]["content"],
+                color=0xFF0000
+            )
+            date=data["incidents"][i]["created_at"]
+            date_obj = datetime.fromisoformat(date)
+            date_readable = date_obj.strftime("%Y-%m-%d %H:%M:%S")
+            embed.add_field(
+                name="Started at",
+                value=date_readable
+            )
+            embed.add_field(
+                name="Severity",
+                value=data["incidents"][i]["incident_severity"]
+            )
+            list_embeds.append(embed)
+        for i in range(len(data["maintenances"])):
+            for k in range(len(data["maintenances"][i]["titles"])):
+                if data["maintenances"][i]["titles"][k]["locale"]=="en_US":
+                    index=k
+            embed=discord.Embed(
+                title=data["maintenances"][i]["titles"][index]["content"],
+                description=data["maintenances"][i]["updates"][0]["translations"][index]["content"],
+                color=0xFF0000
+            )
+            date=data["maintenances"][i]["created_at"]
+            date_obj = datetime.fromisoformat(date)
+            date_readable = date_obj.strftime("%Y-%m-%d %H:%M:%S")
+            embed.add_field(
+                name="Started at",
+                value=date_readable
+            )
+            embed.add_field(
+                name="Severity",
+                value=data["maintenances"][i]["incident_severity"]
+            )
+            list_embeds.append(embed)
+        list_embeds[-1].set_footer(
+            text=f"Command made by {interaction.user}",
+            icon_url=interaction.user.avatar
+        )
+        if list_embeds==[]:
+            e=discord.Embed(
+                title="No issues ✅",
+                description="There are currently no issues on these servers.",
+                color=0x00FF0D
+            )
+            list_embeds.append(e)
         await interaction.response.send_message(embeds=list_embeds)
     else:
         with open("errors.json", encoding="UTF-8") as f:
