@@ -98,12 +98,23 @@ def correct_name(name : str):
     z=w.capitalize()
     return z
 
-def get_latest_version():
+def get_versions():
     request=requests.get(url="https://ddragon.leagueoflegends.com/api/versions.json").json()
-    return request[0]
+    return request
+
+def get_versions_choices():
+    L=[]
+    for i in get_versions():
+        L.append(
+            Choice(
+                name=i,
+                value=i
+            )
+        )
+    return L
 
 def get_champion_name_from_id(id : int):
-    request=requests.get(url="https://ddragon.leagueoflegends.com/cdn/{}/data/fr_FR/champion.json".format(get_latest_version())).json()
+    request=requests.get(url="https://ddragon.leagueoflegends.com/cdn/{}/data/fr_FR/champion.json".format(get_versions()[0])).json()
     for k in request["data"]:
         if request["data"][k]["key"]==str(id):
             return k
@@ -157,7 +168,7 @@ async def account(
         description="Informations about **{}**'s account.".format(summoner["name"])
         )
         e.set_thumbnail(
-            url="https://ddragon.leagueoflegends.com/cdn/{}/img/profileicon/{}.png".format(get_latest_version(), summoner["profileIconId"])
+            url="https://ddragon.leagueoflegends.com/cdn/{}/img/profileicon/{}.png".format(get_versions()[0], summoner["profileIconId"])
         )
         e.add_field(
             name="Level",
@@ -229,30 +240,31 @@ async def lol_rank(
                     url=data["UNRANKED"]
                 )
             await interaction.response.send_message(embed=e)
-        for i in range(len(league)):
-            e.add_field(
-                name="Mode",
-                value=league[i]["queueType"],
-                inline=False
-            )
-            e.add_field(
-                name="Rank",
-                value="**{} {} {}LP**".format(league[i]["tier"], league[i]["rank"], league[i]["leaguePoints"])
-            )
-            e.add_field(
-                name="Winrate",
-                value="**{}%** ({} wins out of {} games).".format(round(league[i]["wins"]/(league[i]["wins"]+league[i]["losses"])*100, 1), league[i]["wins"], league[i]["wins"]+league[i]["losses"])
-            )
-            e.add_field(
-                name="Inactive",
-                value=league[i]["inactive"]
-            )
-            with open("ranks.json", encoding="UTF-8") as f:
-                data=json.load(f)
-                e.set_thumbnail(
-                    url=data[league[i]["tier"]]
+        else:
+            for i in range(len(league)):
+                e.add_field(
+                    name="Mode",
+                    value=league[i]["queueType"],
+                    inline=False
                 )
-        await interaction.response.send_message(embed=e)
+                e.add_field(
+                    name="Rank",
+                    value="**{} {} {}LP**".format(league[i]["tier"], league[i]["rank"], league[i]["leaguePoints"])
+                )
+                e.add_field(
+                    name="Winrate",
+                    value="**{}%** ({} wins out of {} games).".format(round(league[i]["wins"]/(league[i]["wins"]+league[i]["losses"])*100, 1), league[i]["wins"], league[i]["wins"]+league[i]["losses"])
+                )
+                e.add_field(
+                    name="Inactive",
+                    value=league[i]["inactive"]
+                )
+                with open("ranks.json", encoding="UTF-8") as f:
+                    data=json.load(f)
+                    e.set_thumbnail(
+                        url=data[league[i]["tier"]]
+                    )
+            await interaction.response.send_message(embed=e)
     else:
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
@@ -298,30 +310,31 @@ async def tft_rank(
                     url=data["UNRANKED"]
                 )
             await interaction.response.send_message(embed=e)
-        for i in range(len(league)):
-            e.add_field(
-                name="Mode",
-                value=league[i]["queueType"],
-                inline=False
-            )
-            e.add_field(
-                name="Rank",
-                value="**{} {} {}LP**".format(league[i]["tier"], league[i]["rank"], league[i]["leaguePoints"])
-            )
-            e.add_field(
-                name="Winrate",
-                value="**{}%** ({} wins out of {} games).".format(round(league[i]["wins"]/(league[i]["wins"]+league[i]["losses"])*100, 1), league[i]["wins"], league[i]["wins"]+league[i]["losses"])
-            )
-            e.add_field(
-                name="Inactive",
-                value=league[i]["inactive"]
-            )
-            with open("ranks.json", encoding="UTF-8") as f:
-                data=json.load(f)
-                e.set_thumbnail(
-                    url=data[league[i]["tier"]]
+        else:
+            for i in range(len(league)):
+                e.add_field(
+                    name="Mode",
+                    value=league[i]["queueType"],
+                    inline=False
                 )
-        await interaction.response.send_message(embed=e)
+                e.add_field(
+                    name="Rank",
+                    value="**{} {} {}LP**".format(league[i]["tier"], league[i]["rank"], league[i]["leaguePoints"])
+                )
+                e.add_field(
+                    name="Winrate",
+                    value="**{}%** ({} wins out of {} games).".format(round(league[i]["wins"]/(league[i]["wins"]+league[i]["losses"])*100, 1), league[i]["wins"], league[i]["wins"]+league[i]["losses"])
+                )
+                e.add_field(
+                    name="Inactive",
+                    value=league[i]["inactive"]
+                )
+                with open("ranks.json", encoding="UTF-8") as f:
+                    data=json.load(f)
+                    e.set_thumbnail(
+                        url=data[league[i]["tier"]]
+                    )
+            await interaction.response.send_message(embed=e)
     else:
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
@@ -362,30 +375,84 @@ async def lol_mastery(
             number=0
         else:
             number-=1
+        try:
+            e.set_thumbnail(
+                url="https://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}.png".format(get_versions()[0], get_champion_name_from_id(mastery[number]["championId"]))
+            )
+            e.add_field(
+                name=get_champion_name_from_id(mastery[number]["championId"]),
+                value="Mastery **{}** with **{}** points.".format(mastery[number]["championLevel"], mastery[number]["championPoints"]),
+                inline=False
+            )
+            e.add_field(
+                name="Tokens earned",
+                value=mastery[number]["tokensEarned"]
+            )
+            e.add_field(
+                name="Chest granted ?",
+                value=mastery[number]["chestGranted"]
+            )
+            e.add_field(
+                name="Points until next level",
+                value=mastery[number]["championPointsUntilNextLevel"]
+            )
+            await interaction.response.send_message(embed=e)
+        except IndexError:
+            await interaction.response.send_message(f"❌ Out of range, the number {number+1} is too high or too low.")
+    else:
+        with open("errors.json", encoding="UTF-8") as f:
+            data=json.load(f)
+            await interaction.response.send_message(data[str(request.status_code)])
+
+#lol_champion
+@bot.tree.command(
+    name="lol_champion",
+    description="Gives you informations about a given champion."
+)
+@app_commands.describe(
+    champion="The champion you want to get informations about."
+)
+async def lol_champion(
+    interaction : discord.Interaction,
+    champion : str
+):
+    correct_champion=correct_name(champion)
+    request=requests.get("https://ddragon.leagueoflegends.com/cdn/{}/data/en_US/champion/{}.json".format(get_versions()[0], correct_champion))
+    if request.status_code==200:
+        champion_data=request.json()["data"][correct_champion]
+        e=discord.Embed(
+            title="{}, {}".format(correct_champion, champion_data["title"]),
+            description=f"Informations about {correct_champion}"
+        )
         e.set_thumbnail(
-            url="https://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}.png".format(get_latest_version(), get_champion_name_from_id(mastery[number]["championId"]))
+            url="https://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}.png".format(get_versions()[0], correct_champion)
         )
         e.add_field(
-            name=get_champion_name_from_id(mastery[number]["championId"]),
-            value="Mastery **{}** with **{}** points.".format(mastery[number]["championLevel"], mastery[number]["championPoints"]),
+            name="Description",
+            value=champion_data["blurb"],
             inline=False
         )
         e.add_field(
-            name="Tokens earned",
-            value=mastery[number]["tokensEarned"]
+            name="Type",
+            value=champion_data["partype"]
         )
         e.add_field(
-            name="Chest granted ?",
-            value=mastery[number]["chestGranted"]
+            name="Roles",
+            value=", ".join(champion_data["tags"])
         )
-        e.add_field(
-            name="Points until next level",
-            value=mastery[number]["championPointsUntilNextLevel"]
+        e.set_footer(
+            text=f"Command made by {interaction.user}",
+            icon_url=interaction.user.avatar
         )
+        for i in list(champion_data["stats"]):
+            e.add_field(
+                name=i,
+                value=champion_data["stats"][i]
+            )
         await interaction.response.send_message(embed=e)
     else:
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
             await interaction.response.send_message(data[str(request.status_code)])
 
-bot.run("MTE5ODU4NjQ2MzIwNjUxMDYyMw.GpOZ19.jA_V8HdXw55YbJMyrPt_7YdWG1E7QPPOKU5tGo")
+bot.run("")
