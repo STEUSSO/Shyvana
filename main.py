@@ -102,17 +102,6 @@ def get_versions():
     request=requests.get(url="https://ddragon.leagueoflegends.com/api/versions.json").json()
     return request
 
-def get_versions_choices():
-    L=[]
-    for i in get_versions():
-        L.append(
-            Choice(
-                name=i,
-                value=i
-            )
-        )
-    return L
-
 def get_champion_name_from_id(id : int):
     request=requests.get(url="https://ddragon.leagueoflegends.com/cdn/{}/data/fr_FR/champion.json".format(get_versions()[0])).json()
     for k in request["data"]:
@@ -165,7 +154,7 @@ async def account(
         summoner=request.json()
         e = discord.Embed(
         title=summoner["name"],
-        description="Informations about **{}**'s account.".format(summoner["name"])
+        description="Informations about {}'s account.".format(summoner["name"])
         )
         e.set_thumbnail(
             url="https://ddragon.leagueoflegends.com/cdn/{}/img/profileicon/{}.png".format(get_versions()[0], summoner["profileIconId"])
@@ -199,11 +188,10 @@ async def account(
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
             await interaction.response.send_message(data[str(request.status_code)])
-    
 #lol_rank
 @bot.tree.command(
     name="lol_rank",
-    description="Gives you the LoL rank of a given user."
+    description="Gives you the different ranks of a given player"
 )
 @app_commands.describe(
     name="The name of the player's account.",
@@ -222,119 +210,56 @@ async def lol_rank(
         summoner=request.json()
         e=discord.Embed(
             title=summoner["name"],
-            description="Informations about **{}**'s ranked performances.".format(summoner["name"])
+            description="Informations about {}'s all ranked performances.".format(summoner["name"])
         )
         e.set_footer(
             text=f"Command made by {interaction.user}",
             icon_url=interaction.user.avatar
         )
-        league=get_league(name, region)
+        e.set_thumbnail(
+            url="https://ddragon.leagueoflegends.com/cdn/{}/img/profileicon/{}.png".format(get_versions()[0], summoner["profileIconId"])
+        )
+        league=get_league(name, region)+get_tft_league(name, region)
+        list_embeds=[e]
         if league==[]:
-            e.add_field(
-                name="Rank",
-                value="**UNRANKED**"
+            embed=discord.Embed(
+                title="Rank"
+            )
+            embed.add_field(
+                name="Rank of {}".format(summoner["name"]),
+                value="UNRANKED"
             )
             with open("ranks.json", encoding="UTF-8") as f:
                 data=json.load(f)
-                e.set_thumbnail(
+                embed.set_thumbnail(
                     url=data["UNRANKED"]
                 )
-            await interaction.response.send_message(embed=e)
+            list_embeds.append(embed)
         else:
             for i in range(len(league)):
-                e.add_field(
-                    name="Mode",
-                    value=league[i]["queueType"],
-                    inline=False
+                embed=discord.Embed(
+                    title=league[i]["queueType"],
+                    description="Rank of {} in {}".format(summoner["name"], league[i]["queueType"])
                 )
-                e.add_field(
+                embed.add_field(
                     name="Rank",
-                    value="**{} {} {}LP**".format(league[i]["tier"], league[i]["rank"], league[i]["leaguePoints"])
+                    value="{} {} {}LP".format(league[i]["tier"], league[i]["rank"], league[i]["leaguePoints"])
                 )
-                e.add_field(
+                embed.add_field(
                     name="Winrate",
-                    value="**{}%** ({} wins out of {} games).".format(round(league[i]["wins"]/(league[i]["wins"]+league[i]["losses"])*100, 1), league[i]["wins"], league[i]["wins"]+league[i]["losses"])
+                    value="{}% ({} wins out of {} games).".format(round(league[i]["wins"]/(league[i]["wins"]+league[i]["losses"])*100, 1), league[i]["wins"], league[i]["wins"]+league[i]["losses"])
                 )
-                e.add_field(
+                embed.add_field(
                     name="Inactive",
                     value=league[i]["inactive"]
                 )
                 with open("ranks.json", encoding="UTF-8") as f:
                     data=json.load(f)
-                    e.set_thumbnail(
+                    embed.set_thumbnail(
                         url=data[league[i]["tier"]]
                     )
-            await interaction.response.send_message(embed=e)
-    else:
-        with open("errors.json", encoding="UTF-8") as f:
-            data=json.load(f)
-            await interaction.response.send_message(data[str(request.status_code)])
-
-#tft_rank
-@bot.tree.command(
-    name="tft_rank",
-    description="Gives you the TFT rank of a given player."
-)
-@app_commands.describe(
-    name="The name of the player's account.",
-    region="The region where the user plays."
-)
-@app_commands.choices(
-    region=region_choices
-)
-async def tft_rank(
-    interaction : discord.Interaction,
-    name : str,
-    region : str
-):
-    request=get_summoner(name, region)
-    if request.status_code==200:
-        summoner = get_summoner(name, region).json()
-        e=discord.Embed(
-            title=summoner["name"],
-            description="Informations about **{}**'s TFT ranked performances.".format(summoner["name"])
-        )
-        e.set_footer(
-            text=f"Command made by {interaction.user}",
-            icon_url=interaction.user.avatar
-        )
-        league=get_tft_league(name, region)
-        if league==[]:
-            e.add_field(
-                name="Rank",
-                value="**UNRANKED**"
-            )
-            with open("ranks.json", encoding="UTF-8") as f:
-                data=json.load(f)
-                e.set_thumbnail(
-                    url=data["UNRANKED"]
-                )
-            await interaction.response.send_message(embed=e)
-        else:
-            for i in range(len(league)):
-                e.add_field(
-                    name="Mode",
-                    value=league[i]["queueType"],
-                    inline=False
-                )
-                e.add_field(
-                    name="Rank",
-                    value="**{} {} {}LP**".format(league[i]["tier"], league[i]["rank"], league[i]["leaguePoints"])
-                )
-                e.add_field(
-                    name="Winrate",
-                    value="**{}%** ({} wins out of {} games).".format(round(league[i]["wins"]/(league[i]["wins"]+league[i]["losses"])*100, 1), league[i]["wins"], league[i]["wins"]+league[i]["losses"])
-                )
-                e.add_field(
-                    name="Inactive",
-                    value=league[i]["inactive"]
-                )
-                with open("ranks.json", encoding="UTF-8") as f:
-                    data=json.load(f)
-                    e.set_thumbnail(
-                        url=data[league[i]["tier"]]
-                    )
-            await interaction.response.send_message(embed=e)
+                list_embeds.append(embed)
+        await interaction.response.send_message(embeds=list_embeds)
     else:
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
@@ -381,7 +306,7 @@ async def lol_mastery(
             )
             e.add_field(
                 name=get_champion_name_from_id(mastery[number]["championId"]),
-                value="Mastery **{}** with **{}** points.".format(mastery[number]["championLevel"], mastery[number]["championPoints"]),
+                value="Mastery {} with {} points.".format(mastery[number]["championLevel"], mastery[number]["championPoints"]),
                 inline=False
             )
             e.add_field(
@@ -489,4 +414,4 @@ async def lol_champion(
             data=json.load(f)
             await interaction.response.send_message(data[str(request.status_code)])
 
-bot.run("")
+bot.run("MTE5ODU4NjQ2MzIwNjUxMDYyMw.GYGP4f.989OO1JttWfGHZgxRd_csyLvv9pd2cT8VuAfE4")
