@@ -414,4 +414,4 @@ async def lol_champion(
             data=json.load(f)
             await interaction.response.send_message(data[str(request.status_code)])
 
-bot.run("MTE5ODU4NjQ2MzIwNjUxMDYyMw.GYGP4f.989OO1JttWfGHZgxRd_csyLvv9pd2cT8VuAfE4")
+bot.run("")
