@@ -440,16 +440,50 @@ async def lol_champion(
             name="Roles",
             value=", ".join(champion_data["tags"])
         )
-        e.set_footer(
+        passive=discord.Embed(
+            title="Passive",
+            description=champion_data["passive"]["name"]
+        )
+        passive.add_field(
+            name="Description",
+            value=champion_data["passive"]["description"]
+        )
+        passive.set_thumbnail(
+            url="https://ddragon.leagueoflegends.com/cdn/{}/img/passive/{}".format(get_versions()[0], champion_data["passive"]["image"]["full"])
+        )
+        list_embeds=[e, passive]
+        for i in range(len(champion_data["spells"])):
+            spell_data=champion_data["spells"][i]
+            embed=discord.Embed(
+                title=spell_data["id"],
+                description=spell_data["name"]
+            )
+            embed.set_thumbnail(
+                url="https://ddragon.leagueoflegends.com/cdn/{}/img/spell/{}".format(get_versions()[0], spell_data["image"]["full"])
+            )
+            embed.add_field(
+                name="Description",
+                value=spell_data["description"],
+                inline=False
+            )
+            embed.add_field(
+                name="Cost",
+                value=spell_data["costBurn"]
+            )
+            embed.add_field(
+                name="Range",
+                value=spell_data["rangeBurn"]
+            )
+            embed.add_field(
+                name="Cooldown",
+                value=spell_data["cooldownBurn"]
+            )
+            list_embeds.append(embed)
+        list_embeds[-1].set_footer(
             text=f"Command made by {interaction.user}",
             icon_url=interaction.user.avatar
         )
-        for i in list(champion_data["stats"]):
-            e.add_field(
-                name=i,
-                value=champion_data["stats"][i]
-            )
-        await interaction.response.send_message(embed=e)
+        await interaction.response.send_message(embeds=list_embeds)
     else:
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
