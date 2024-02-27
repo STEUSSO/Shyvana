@@ -455,8 +455,4 @@ async def lol_champion(
             data=json.load(f)
             await interaction.response.send_message(data[str(request.status_code)])
 
-<<<<<<< HEAD
 bot.run("")
-=======
-bot.run("")
->>>>>>> 9cd34ea60416c56f72d74eb4557a22644a7de70d
