@@ -152,6 +152,7 @@ async def account(
 ):
     request=get_summoner(name, region)
     if request.status_code==200:
+        await interaction.response.send_message("Please wait... ⏳")
         summoner=request.json()
         e = discord.Embed(
         title=summoner["name"],
@@ -184,7 +185,7 @@ async def account(
             text=f"Command made by {interaction.user}",
             icon_url=interaction.user.avatar
         )
-        await interaction.response.send_message(embed=e)
+        await interaction.edit_original_response(content=None, embed=e)
     else:
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
@@ -208,6 +209,7 @@ async def lol_rank(
 ):
     request=get_summoner(name, region)
     if request.status_code==200:
+        await interaction.response.send_message("Please wait... ⏳")
         summoner=request.json()
         e=discord.Embed(
             title=summoner["name"],
@@ -260,7 +262,7 @@ async def lol_rank(
                         url=data[league[i]["tier"]]
                     )
                 list_embeds.append(embed)
-        await interaction.response.send_message(embeds=list_embeds)
+        await interaction.edit_original_response(content=None, embeds=list_embeds)
     else:
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
@@ -269,12 +271,12 @@ async def lol_rank(
 #lol_mastery
 @bot.tree.command(
     name="lol_mastery",
-    description="Showing how much mastery a given player has on different champions."
+    description="Showing how much mastery a given player has on different champions (showing 3 of them)."
 )
 @app_commands.describe(
     name="The name of the player.",
     region="The region you would like to see free champions.",
-    number="The ranking of the champion (starting from the best, number 1 if none is given)."
+    number="The number the bot will start counting from."
 )
 @app_commands.choices(
     region=region_choices
@@ -287,44 +289,44 @@ async def lol_mastery(
 ):
     request = get_summoner(name, region)
     if request.status_code==200:
+        await interaction.response.send_message("Please wait... ⏳")
         summoner=request.json()
-        e=discord.Embed(
-            title=summoner["name"],
-            description="Informations about {}'s masteries.".format(summoner["name"])
-        )
-        e.set_footer(
-            text=f"Command made by {interaction.user}",
-            icon_url=interaction.user.avatar
-        )
         mastery=get_mastery(name, region)
         if number==None:
             number=0
         else:
             number-=1
         try:
-            e.set_thumbnail(
-                url="https://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}.png".format(get_versions()[0], get_champion_name_from_id(mastery[number]["championId"]))
+            list_embeds=[]
+            for i in range(number, number+3):
+                champion=get_champion_name_from_id(mastery[i]["championId"])
+                embed=discord.Embed(
+                    title=champion,
+                    description="Mastery {} with {} points.".format(mastery[i]["championLevel"], mastery[i]["championPoints"])
+                )
+                embed.set_thumbnail(
+                    url="https://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}.png".format(get_versions()[0], champion)
+                )
+                embed.add_field(
+                    name="Tokens earned",
+                    value=mastery[i]["tokensEarned"]
+                )
+                embed.add_field(
+                    name="Chest granted ?",
+                    value=mastery[i]["chestGranted"]
+                )
+                embed.add_field(
+                    name="Points until next level",
+                    value=mastery[i]["championPointsUntilNextLevel"]
+                )
+                list_embeds.append(embed)
+            list_embeds[-1].set_footer(
+                text=f"Command made by {interaction.user}",
+                icon_url=interaction.user.avatar
             )
-            e.add_field(
-                name=get_champion_name_from_id(mastery[number]["championId"]),
-                value="Mastery {} with {} points.".format(mastery[number]["championLevel"], mastery[number]["championPoints"]),
-                inline=False
-            )
-            e.add_field(
-                name="Tokens earned",
-                value=mastery[number]["tokensEarned"]
-            )
-            e.add_field(
-                name="Chest granted ?",
-                value=mastery[number]["chestGranted"]
-            )
-            e.add_field(
-                name="Points until next level",
-                value=mastery[number]["championPointsUntilNextLevel"]
-            )
-            await interaction.response.send_message(embed=e)
+            await interaction.edit_original_response(content=None, embeds=list_embeds)
         except IndexError:
-            await interaction.response.send_message(f"❌ Out of range, the number {number+1} is too high or too low.")
+            await interaction.edit_original_response(content=f"❌ Out of range, the number {number+1} is too high or too low.")
     else:
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
@@ -345,6 +347,7 @@ async def lol_champion(
     correct_champion=correct_name(champion)
     request=requests.get("https://ddragon.leagueoflegends.com/cdn/{}/data/en_US/champion/{}.json".format(get_versions()[0], correct_champion))
     if request.status_code==200:
+        await interaction.response.send_message("Please wait... ⏳")
         champion_data=request.json()["data"][correct_champion]
         e=discord.Embed(
             title="{}, {}".format(correct_champion, champion_data["title"]),
@@ -409,7 +412,7 @@ async def lol_champion(
             text=f"Command made by {interaction.user}",
             icon_url=interaction.user.avatar
         )
-        await interaction.response.send_message(embeds=list_embeds)
+        await interaction.edit_original_response(content=None, embeds=list_embeds)
     else:
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
@@ -432,6 +435,7 @@ async def lol_status(
 ):
     request=requests.get("https://{}.api.riotgames.com/lol/status/v4/platform-data?api_key={}".format(region, api_key))
     if request.status_code==200:
+        await interaction.response.send_message("Please wait... ⏳")
         data=request.json()
         list_embeds=[]
         for i in range(len(data["incidents"])):
@@ -487,7 +491,78 @@ async def lol_status(
                 color=0x00FF0D
             )
             list_embeds.append(e)
-        await interaction.response.send_message(embeds=list_embeds)
+        await interaction.edit_original_response(content=None, embeds=list_embeds)
+    else:
+        with open("errors.json", encoding="UTF-8") as f:
+            data=json.load(f)
+            await interaction.response.send_message(data[str(request.status_code)])
+
+@bot.tree.command(
+    name="lol_match",
+    description="Gives you informations about the current match."
+)
+@app_commands.describe(
+    name="The username.",
+    region="The region you're playing in."
+)
+@app_commands.choices(
+    region=region_choices
+)
+async def lol_status(
+    interaction : discord.Interaction,
+    name : str,
+    region : str
+):
+    request=requests.get("https://{}.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/{}?api_key={}".format(region, get_summoner(name, region).json()["id"], api_key))
+    if request.status_code==200:
+        await interaction.response.send_message("Please wait... ⏳")
+        game_data=request.json()
+        list_embeds=[]
+        for i in range(len(game_data["participants"])):
+            if i<=4:
+                color=0x0080FF
+            else:
+                color=0xFF0000
+            summoner=get_summoner(game_data["participants"][i]["summonerName"], region).json()
+            league=get_league(game_data["participants"][i]["summonerName"], region)
+            mastery_data=get_mastery(game_data["participants"][i]["summonerName"], region)
+            champion=get_champion_name_from_id(game_data["participants"][i]["championId"])
+            for j in range(len(mastery_data)):
+                if mastery_data[j]["championId"]==game_data["participants"][i]["championId"]:
+                    mastery="Mastery {}, {} points.".format(mastery_data[j]["championLevel"], mastery_data[j]["championPoints"])
+            embed=discord.Embed(
+                title=game_data["participants"][i]["summonerName"],
+                description="Level {}".format(summoner["summonerLevel"]),
+                color=color
+            )
+            tier="UNRANKED"
+            rank="UNRANKED"
+            for k in range(len(league)):
+                if league[k]["queueType"]=="RANKED_SOLO_5x5":
+                    tier=league[k]["tier"]
+                    rank="{} {} {}LP".format(tier, league[k]["rank"], league[k]["leaguePoints"])
+                    winrate="{}% ({} wins out of {} games).".format(round(league[k]["wins"]/(league[k]["wins"]+league[k]["losses"])*100, 1), league[k]["wins"], league[k]["wins"]+league[k]["losses"])
+            embed.add_field(
+                name="Rank",
+                value=rank
+            )
+            embed.add_field(
+                name="Winrate",
+                value=winrate
+            )
+            embed.add_field(
+                name="Mastery",
+                value=mastery
+            )
+            embed.set_thumbnail(
+                url="https://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}.png".format(get_versions()[0], champion)
+            )
+            list_embeds.append(embed)
+        list_embeds[-1].set_footer(
+            text=f"Command made by {interaction.user}",
+            icon_url=interaction.user.avatar
+        )
+        await interaction.edit_original_response(content=None, embeds=list_embeds)  
     else:
         with open("errors.json", encoding="UTF-8") as f:
             data=json.load(f)
