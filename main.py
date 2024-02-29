@@ -293,7 +293,6 @@ async def lol_mastery(
     request = get_summoner(name, region)
     if request.status_code==200:
         await interaction.response.send_message("Please wait... ⏳")
-        summoner=request.json()
         mastery=get_mastery(name, region)
         if number==None:
             number=0
