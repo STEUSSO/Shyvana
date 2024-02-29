@@ -81,12 +81,15 @@ def get_summoner(name : str, region : str):
     return request
 
 def get_league(name : str, region : str):
-    request=requests.get("https://{}.api.riotgames.com/lol/league/v4/entries/by-summoner/{}?api_key={}".format(region, get_summoner(name, region).json()["id"], api_key)).json()
-    return request
-
-def get_tft_league(name : str, region : str):
-    request=requests.get("https://{}.api.riotgames.com/tft/league/v1/entries/by-summoner/{}?api_key={}".format(region, get_summoner(name, region).json()["id"], api_key)).json()
-    return request
+    request_lol=requests.get("https://{}.api.riotgames.com/lol/league/v4/entries/by-summoner/{}?api_key={}".format(region, get_summoner(name, region).json()["id"], api_key)).json()
+    request_tft=requests.get("https://{}.api.riotgames.com/tft/league/v1/entries/by-summoner/{}?api_key={}".format(region, get_summoner(name, region).json()["id"], api_key)).json()
+    list_modes=["RANKED_SOLO_5x5", "RANKED_FLEX_SR", "RANKED_TFT_DOUBLE_UP", "RANKED_TFT"]
+    league_raw=request_lol+request_tft
+    league=[]
+    for i in range(len(league_raw)):
+        if league_raw[i]["queueType"] in list_modes:
+            league.append(league_raw[i])
+    return league
 
 def get_mastery(name : str, region : str):
     request=requests.get("https://{}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{}?api_key={}".format(region, get_summoner(name, region).json()["puuid"], api_key)).json()
@@ -222,7 +225,7 @@ async def lol_rank(
         e.set_thumbnail(
             url="https://ddragon.leagueoflegends.com/cdn/{}/img/profileicon/{}.png".format(get_versions()[0], summoner["profileIconId"])
         )
-        league=get_league(name, region)+get_tft_league(name, region)
+        league=get_league(name, region)
         list_embeds=[e]
         if league==[]:
             embed=discord.Embed(
